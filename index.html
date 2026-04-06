@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bet Tracker Pro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="hero">
+            <div>
+                <p class="tag">SPORT BETTING DASHBOARD</p>
+                <h1>Bet Tracker Pro</h1>
+                <p class="subtitle">Profit, bankroll, win rate és ROI egy helyen.</p>
+            </div>
+            <div class="hero-badge">Built by Bense Dávid ⚡</div>
+        </header>
+
+        <section class="stats">
+            <div class="card stat-card">
+                <span>Kezdő bankroll</span>
+                <h3>{{ starting_bankroll }} Ft</h3>
+            </div>
+
+            <div class="card stat-card highlight">
+                <span>Jelenlegi bankroll</span>
+                <h3>{{ current_bankroll }} Ft</h3>
+            </div>
+
+            <div class="card stat-card {% if total_profit >= 0 %}positive{% else %}negative{% endif %}">
+                <span>Profit</span>
+                <h3>{{ total_profit }} Ft</h3>
+            </div>
+
+            <div class="card stat-card">
+                <span>Win rate</span>
+                <h3>{{ win_rate }}%</h3>
+            </div>
+
+            <div class="card stat-card">
+                <span>ROI</span>
+                <h3>{{ roi }}%</h3>
+            </div>
+
+            <div class="card stat-card">
+                <span>W - L - P</span>
+                <h3>{{ wins }} / {{ losses }} / {{ pending }}</h3>
+            </div>
+        </section>
+
+        <section class="grid">
+            <div class="card form-card">
+                <h2>Új fogadás</h2>
+                <form method="POST" action="/add">
+                    <label>Esemény</label>
+                    <input type="text" name="event" placeholder="pl. Real Madrid - Barcelona" required>
+
+                    <label>Tipp</label>
+                    <input type="text" name="pick" placeholder="pl. Over 2.5" required>
+
+                    <label>Odds</label>
+                    <input type="number" step="0.01" name="odds" placeholder="pl. 1.85" required>
+
+                    <label>Tét</label>
+                    <input type="number" step="0.01" name="stake" placeholder="pl. 5000" required>
+
+                    <label>Státusz</label>
+                    <select name="status" required>
+                        <option value="pending">Pending</option>
+                        <option value="win">Win</option>
+                        <option value="loss">Loss</option>
+                    </select>
+
+                    <button type="submit">Fogadás mentése</button>
+                </form>
+            </div>
+
+            <div class="card side-card">
+                <h2>Gyors összefoglaló</h2>
+                <div class="mini-stat">
+                    <span>Nyerő fogadások</span>
+                    <strong>{{ wins }}</strong>
+                </div>
+                <div class="mini-stat">
+                    <span>Vesztes fogadások</span>
+                    <strong>{{ losses }}</strong>
+                </div>
+                <div class="mini-stat">
+                    <span>Függő fogadások</span>
+                    <strong>{{ pending }}</strong>
+                </div>
+                <div class="mini-stat">
+                    <span>Állapot</span>
+                    <strong>
+                        {% if total_profit > 0 %}
+                            Pluszban vagy
+                        {% elif total_profit < 0 %}
+                            Mínuszban vagy
+                        {% else %}
+                            Nullán vagy
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="card table-card">
+            <div class="table-header">
+                <h2>Fogadások</h2>
+                <p>Az összes mentett tipped.</p>
+            </div>
+
+            {% if bets %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Esemény</th>
+                                <th>Tipp</th>
+                                <th>Odds</th>
+                                <th>Tét</th>
+                                <th>Státusz</th>
+                                <th>Profit</th>
+                                <th>Törlés</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bet in bets %}
+                            <tr>
+                                <td>{{ bet.event }}</td>
+                                <td>{{ bet.pick }}</td>
+                                <td>{{ bet.odds }}</td>
+                                <td>{{ bet.stake }} Ft</td>
+                                <td>
+                                    <span class="status status-{{ bet.status }}">
+                                        {{ bet.status }}
+                                    </span>
+                                </td>
+                                <td class="{% if bet.profit > 0 %}profit-plus{% elif bet.profit < 0 %}profit-minus{% endif %}">
+                                    {{ bet.profit }} Ft
+                                </td>
+                                <td>
+                                    <a class="delete-btn" href="/delete/{{ bet.id }}">Törlés</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty">
+                    <p>Még nincs fogadásod elmentve.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <footer class="footer">
+            <p>Bet Tracker Pro • Built by Bense Dávid ⚡</p>
+        </footer>
+    </div>
+</body>
+</html>
