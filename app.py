@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///bets.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -13,17 +12,21 @@ starting_bankroll = 100000
 
 class Bet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    event = db.Column(db.String(200))
-    pick = db.Column(db.String(200))
-    odds = db.Column(db.Float)
-    stake = db.Column(db.Float)
-    status = db.Column(db.String(50))
-    profit = db.Column(db.Float)
+    event = db.Column(db.String(200), nullable=False)
+    pick = db.Column(db.String(200), nullable=False)
+    odds = db.Column(db.Float, nullable=False)
+    stake = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(50), nullable=False)
+    profit = db.Column(db.Float, nullable=False)
+
+
+with app.app_context():
+    db.create_all()
 
 
 @app.route("/")
 def home():
-    bets = Bet.query.all()
+    bets = Bet.query.order_by(Bet.id.desc()).all()
 
     total_profit = sum(bet.profit for bet in bets)
     current_bankroll = starting_bankroll + total_profit
@@ -56,9 +59,16 @@ def home():
 def add_bet():
     event = request.form.get("event", "").strip()
     pick = request.form.get("pick", "").strip()
-    odds = float(request.form.get("odds", 0))
-    stake = float(request.form.get("stake", 0))
-    status = request.form.get("status", "pending")
+    status = request.form.get("status", "pending").strip()
+
+    try:
+        odds = float(request.form.get("odds", 0))
+        stake = float(request.form.get("stake", 0))
+    except ValueError:
+        return redirect("/")
+
+    if not event or not pick:
+        return redirect("/")
 
     if status == "win":
         profit = (odds * stake) - stake
